@@ -27,6 +27,12 @@
 #include "../usermods/wemos_shield_display/usermod_shield_disp_temp.h"
 #endif
 
+#ifdef USERMOD_MODE_SORT
+#include "../usermods/usermod_v2_mode_sort/usermod_v2_mode_sort.h"
+#endif
+#ifdef USERMOD_ST7789_DISPLAY
+#include "../usermods/ST7789_display/ST7789_display.h"
+#endif
 #ifdef USERMOD_FOUR_LINE_DISLAY
 #include "../usermods/usermod_v2_four_line_display/usermod_v2_four_line_display.h"
 #endif
@@ -36,7 +42,6 @@
 #ifdef USERMOD_AUTO_SAVE
 #include "../usermods/usermod_v2_auto_save/usermod_v2_auto_save.h"
 #endif
-
 #ifdef USERMOD_DHT
 #include "../usermods/DHT/usermod_dht.h"
 #endif
@@ -64,6 +69,11 @@ void registerUsermods()
 #endif
 #ifdef USERMOD_SHIELD_DISP_TEMP
   usermods.add(new ShieldDispTempUsermod());
+#ifdef USERMOD_MODE_SORT
+  usermods.add(new ModeSortUsermod());
+#endif
+#ifdef USERMOD_ST7789_DISPLAY
+  usermods.add(new St7789DisplayUsermod());
 #endif
 #ifdef USERMOD_FOUR_LINE_DISLAY
   usermods.add(new FourLineDisplayUsermod());
@@ -74,6 +84,7 @@ void registerUsermods()
 #ifdef USERMOD_AUTO_SAVE
   usermods.add(new AutoSaveUsermod());
 #endif
+
 #ifdef USERMOD_DHT
 usermods.add(new UsermodDHT());
 #endif
