@@ -7,7 +7,7 @@
 /wled00/Release
 /wled00/extLibs
 /platformio_override.ini
-/wled00/my_config.h 
+/wled00/my_config.h
 /build_output
 .DS_Store
 .gitignore
@@ -15,4 +15,4 @@
 node_modules
 wled00/wled00.ino.cpp
 my_config.h
-wled00/NpbWrapper.h.bak
+.idea
