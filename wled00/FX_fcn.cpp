@@ -44,11 +44,9 @@
 */
 
 //do not call this method from system context (network callback)
-void WS2812FX::finalizeInit(bool supportWhite, uint16_t countPixels, bool skipFirst)
+void WS2812FX::finalizeInit(uint16_t countPixels, bool skipFirst)
 {
-  if (supportWhite == _useRgbw && countPixels == _length && _skipFirstMode == skipFirst) return;
   RESET_RUNTIME;
-  _useRgbw = supportWhite;
   _length = countPixels;
   _skipFirstMode = skipFirst;
 
@@ -163,7 +161,7 @@ uint16_t WS2812FX::realPixelIndex(uint16_t i) {
 void WS2812FX::setPixelColor(uint16_t i, byte r, byte g, byte b, byte w)
 {
   //auto calculate white channel value if enabled
-  if (_useRgbw) {
+  if (isRgbw) {
     if (rgbwMode == RGBW_MODE_AUTO_BRIGHTER || (w == 0 && (rgbwMode == RGBW_MODE_DUAL || rgbwMode == RGBW_MODE_LEGACY)))
     {
       //white value is set to lowest RGB channel
@@ -193,15 +191,15 @@ void WS2812FX::setPixelColor(uint16_t i, byte r, byte g, byte b, byte w)
     uint16_t realIndex = realPixelIndex(i);
 
     for (uint16_t j = 0; j < SEGMENT.grouping; j++) {
-      int16_t indexSet = realIndex + (reversed ? -j : j);
-      if (indexSet < customMappingSize) indexSet = customMappingTable[indexSet];
+      int indexSet = realIndex + (reversed ? -j : j);
       if (indexSet >= SEGMENT.start && indexSet < SEGMENT.stop) {
-        busses.setPixelColor(indexSet + skip, col);
         if (IS_MIRROR) { //set the corresponding mirrored pixel
           uint16_t indexMir = SEGMENT.stop - indexSet + SEGMENT.start - 1;
           if (indexMir < customMappingSize) indexMir = customMappingTable[indexMir];
           busses.setPixelColor(indexMir + skip, col);
         }
+        if (indexSet < customMappingSize) indexSet = customMappingTable[indexSet];
+        busses.setPixelColor(indexSet + skip, col);
       }
     }
   } else { //live data, etc.
@@ -278,7 +276,7 @@ void WS2812FX::show(void) {
     }
 
 
-    if (_useRgbw) //RGBW led total output with white LEDs enabled is still 50mA, so each channel uses less
+    if (isRgbw) //RGBW led total output with white LEDs enabled is still 50mA, so each channel uses less
     {
       powerSum *= 3;
       powerSum = powerSum >> 2; //same as /= 4
@@ -738,6 +736,12 @@ uint16_t WS2812FX::triwave16(uint16_t in)
 {
   if (in < 0x8000) return in *2;
   return 0xFFFF - (in - 0x8000)*2;
+}
+
+uint8_t WS2812FX::sin_gap(uint16_t in) {
+  if (in & 0x100) return 0;
+  //if (in > 255) return 0;
+  return sin8(in + 192); //correct phase shift of sine so that it starts and stops at 0
 }
 
 /*

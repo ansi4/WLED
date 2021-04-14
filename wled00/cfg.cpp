@@ -99,7 +99,7 @@ void deserializeConfig() {
 
   JsonArray ins = hw_led["ins"];
   uint8_t s = 0; //bus iterator
-  useRGBW = false;
+  strip.isRgbw = false;
   busses.removeAll();
   uint32_t mem = 0;
   for (JsonObject elm : ins) {
@@ -127,17 +127,17 @@ void deserializeConfig() {
     uint8_t ledType = elm["type"] | TYPE_WS2812_RGB;
     bool reversed = elm["rev"];
     //RGBW mode is enabled if at least one of the strips is RGBW
-    useRGBW = (useRGBW || BusManager::isRgbw(ledType));
+    strip.isRgbw = (strip.isRgbw || BusManager::isRgbw(ledType));
     s++;
     BusConfig bc = BusConfig(ledType, pins, start, length, colorOrder, reversed);
     mem += busses.memUsage(bc);
     if (mem <= MAX_LED_MEMORY) busses.add(bc);
   }
-  strip.finalizeInit(useRGBW, ledCount, skipFirstLed);
+  strip.finalizeInit(ledCount, skipFirstLed);
   if (hw_led["rev"]) busses.getBus(0)->reversed = true; //set 0.11 global reversed setting for first bus
 
   JsonObject hw_btn_ins_0 = hw[F("btn")][F("ins")][0];
-  CJSON(buttonEnabled, hw_btn_ins_0["type"]);
+  CJSON(buttonType, hw_btn_ins_0["type"]);
   int hw_btn_pin = hw_btn_ins_0[F("pin")][0];
   if (pinManager.allocatePin(hw_btn_pin,false)) {
     btnPin = hw_btn_pin;
@@ -154,7 +154,7 @@ void deserializeConfig() {
   //int hw_btn_ins_0_type = hw_btn_ins_0["type"]; // 0
 
   #ifndef WLED_DISABLE_INFRARED
-  int hw_ir_pin = hw["ir"]["pin"]; // 4
+  int hw_ir_pin = hw["ir"]["pin"] | -1; // 4
   if (pinManager.allocatePin(hw_ir_pin,false)) {
     irPin = hw_ir_pin;
   } else {
@@ -306,6 +306,8 @@ void deserializeConfig() {
   CJSON(currentTimezone, if_ntp[F("tz")]);
   CJSON(utcOffsetSecs, if_ntp[F("offset")]);
   CJSON(useAMPM, if_ntp[F("ampm")]);
+  CJSON(longitude, if_ntp[F("ln")]);
+  CJSON(latitude, if_ntp[F("lt")]);
 
   JsonObject ol = doc[F("ol")];
   CJSON(overlayDefault ,ol[F("clock")]); // 0
@@ -334,7 +336,8 @@ void deserializeConfig() {
   JsonArray timers = tm[F("ins")];
   uint8_t it = 0;
   for (JsonObject timer : timers) {
-    if (it > 7) break;
+    if (it > 9) break;
+    if (it<8 && timer[F("hour")]==255) it=8;  // hour==255 -> sunrise/sunset 
     CJSON(timerHours[it], timer[F("hour")]);
     CJSON(timerMinutes[it], timer[F("min")]);
     CJSON(timerMacro[it], timer[F("macro")]);
@@ -477,7 +480,7 @@ void serializeConfig() {
 
   // button BTNPIN
   JsonObject hw_btn_ins_0 = hw_btn_ins.createNestedObject();
-  hw_btn_ins_0["type"] = (buttonEnabled) ? BTN_TYPE_PUSH : BTN_TYPE_NONE;
+  hw_btn_ins_0["type"] = buttonType;
 
   JsonArray hw_btn_ins_0_pin = hw_btn_ins_0.createNestedArray("pin");
   hw_btn_ins_0_pin.add(btnPin);
@@ -488,11 +491,9 @@ void serializeConfig() {
   hw_btn_ins_0_macros.add(macroDoublePress);
 
   #ifndef WLED_DISABLE_INFRARED
-  if (irPin>=0) {
-    JsonObject hw_ir = hw.createNestedObject("ir");
-    hw_ir["pin"] = irPin;
-    hw_ir[F("type"] = irEnabled;              // the byte 'irEnabled' does contain the IR-Remote Type ( 0=disabled )
-  }
+  JsonObject hw_ir = hw.createNestedObject("ir");
+  hw_ir["pin"] = irPin;
+  hw_ir[F("type")] = irEnabled;              // the byte 'irEnabled' does contain the IR-Remote Type ( 0=disabled )
   #endif
 
   JsonObject hw_relay = hw.createNestedObject(F("relay"));
@@ -501,9 +502,6 @@ void serializeConfig() {
 
   //JsonObject hw_status = hw.createNestedObject("status");
   //hw_status["pin"] = -1;
-
-  JsonObject hw_aux = hw.createNestedObject("aux");
-  hw_aux["pin"] = auxPin;
 
   JsonObject light = doc.createNestedObject(F("light"));
   light[F("scale-bri")] = briMultiplier;
@@ -622,6 +620,8 @@ void serializeConfig() {
   if_ntp[F("tz")] = currentTimezone;
   if_ntp[F("offset")] = utcOffsetSecs;
   if_ntp[F("ampm")] = useAMPM;
+  if_ntp[F("ln")] = longitude;
+  if_ntp[F("lt")] = latitude;
 
   JsonObject ol = doc.createNestedObject("ol");
   ol[F("clock")] = overlayDefault;
@@ -643,8 +643,8 @@ void serializeConfig() {
 
   JsonArray timers_ins = timers.createNestedArray("ins");
 
-  for (byte i = 0; i < 8; i++) {
-    if (timerMacro[i] == 0 && timerHours[i] == 0 && timerMinutes[i] == 0) continue;
+  for (byte i = 0; i < 10; i++) {
+    if (timerMacro[i] == 0 && timerHours[i] == 0 && timerMinutes[i] == 0) continue; // sunrise/sunset get saved always (timerHours=255)
     JsonObject timers_ins0 = timers_ins.createNestedObject();
     timers_ins0["en"] = (timerWeekday[i] & 0x01);
     timers_ins0[F("hour")] = timerHours[i];

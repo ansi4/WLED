@@ -1,6 +1,56 @@
 ## WLED changelog
 
-### Development versions after 0.11.1 release
+### Builds after release 0.12.0
+
+#### Build 2104141
+
+-   Reduced memory usage by 540b by switching to a different trigonometric approximation
+
+#### Build 2104140
+
+-   Added dynamic location-based Sunrise/Sunset macros (PR #1889)
+-   Improved seasonal background handling (PR #1890)
+-   Fixed instance discovery not working if MQTT not compiled in
+-   Fixed Button, IR, Relay pin not assigned by default (resolves #1891)
+
+#### Build 2104120
+
+-   Added switch support (button macro is switch closing action, long press macro switch opening)
+-   Replaced Circus effect with new Running Dual effect (Circus is Tricolor Chase with Red/White/Black)
+-   Fixed ledmap with multiple segments (PR #1864)
+
+#### Build 2104030
+
+-   Fixed ESP32 crash on Drip effect with reversed segment (#1854)
+-   Added flag `WLED_DISABLE_BROWNOUT_DET` to disable ESP32 brownout detector (off by default)
+
+### WLED release 0.12.0
+
+#### Build 2104020
+
+-   Allow clearing button/IR/relay pin on platforms that don't support negative numbers
+-   Removed AUX pin
+-   Hid some easter eggs, only to be found at easter
+
+### Development versions between 0.11.1 and 0.12.0 releases
+
+#### Build 2103310
+
+-   Version bump to 0.12.0 "Hikari"
+-   Fixed LED settings submission in iOS app
+
+#### Build 2103300
+
+-   Version bump to 0.12.0-b5 "Hikari"
+-   Update to core espressif32@3.2
+-   Fixed IR pin not configurable
+
+#### Build 2103290
+
+-   Version bump to 0.12.0-b4 "Hikari"
+-   Experimental use of espressif32@3.1.1
+-   Fixed RGBW mode disabled after LED settings saved
+-   Fixed infrared support not compiled in if IRPIN is not defined
 
 #### Build 2103230
 
@@ -233,7 +283,7 @@
 #### Build 2011153
 
 -   Fixed an ESP32 end-of-file issue
--   Fixed useRGBW not read from cfg.json
+-   Fixed strip.isRgbw not read from cfg.json
 
 #### Build 2011152
 
