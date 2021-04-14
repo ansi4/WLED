@@ -105,17 +105,22 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
         pins[i] = (request->arg(lp).length() > 0) ? request->arg(lp).toInt() : 255;
       }
       type = request->arg(lt).toInt();
+      //if (isRgbw(type)) strip.isRgbw = true; //30fps
+      //strip.isRgbw = true;
       
       if (request->hasArg(lc) && request->arg(lc).toInt() > 0) {
         length = request->arg(lc).toInt();
       } else {
         break;  // no parameter
       }
+
       colorOrder = request->arg(co).toInt();
       start = (request->hasArg(ls)) ? request->arg(ls).toInt() : 0;
 
       if (busConfigs[s] != nullptr) delete busConfigs[s];
       busConfigs[s] = new BusConfig(type, pins, start, length, colorOrder, request->hasArg(cv));
+      //if (BusManager::isRgbw(type)) strip.isRgbw = true; //20fps
+      //strip.isRgbw = true;
       doInitBusses = true;
     }
 
@@ -148,17 +153,9 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
       btnPin = -1;
     }
 
-    int hw_aux_pin = request->arg(F("AX")).toInt();
-    if (pinManager.allocatePin(hw_aux_pin,true)) {
-      auxPin = hw_aux_pin;
-    } else {
-      auxPin = -1;
-    }
-
     strip.ablMilliampsMax = request->arg(F("MA")).toInt();
     strip.milliampsPerLed = request->arg(F("LA")).toInt();
     
-    useRGBW = request->hasArg(F("EW"));
     strip.rgbwMode = request->arg(F("AW")).toInt();
 
     briS = request->arg(F("CA")).toInt();
@@ -199,7 +196,7 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
   //SYNC
   if (subPage == 4)
   {
-    buttonEnabled = request->hasArg(F("BT"));
+    buttonType = request->arg(F("BT")).toInt();
     irEnabled = request->arg(F("IR")).toInt();
     int t = request->arg(F("UP")).toInt();
     if (t > 0) udpPort = t;
@@ -295,6 +292,11 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
     //start ntp if not already connected
     if (ntpEnabled && WLED_CONNECTED && !ntpConnected) ntpConnected = ntpUdp.begin(ntpLocalPort);
 
+    longitude = request->arg(F("LN")).toFloat();
+    latitude = request->arg(F("LT")).toFloat();
+    // force a sunrise/sunset re-calculation
+    calculateSunriseAndSunset(); 
+
     if (request->hasArg(F("OL"))) {
       overlayDefault = request->arg(F("OL")).toInt();
       overlayCurrent = overlayDefault;
@@ -326,7 +328,7 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
     macroDoublePress = request->arg(F("MD")).toInt();
 
     char k[3]; k[2] = 0;
-    for (int i = 0; i<8; i++)
+    for (int i = 0; i<10; i++)
     {
       k[1] = i+48;//ascii 0,1,2,3
 
@@ -717,16 +719,6 @@ bool handleSet(AsyncWebServerRequest *request, const String& req, bool apply)
     nightlightActiveOld = false; //re-init
   }
   if (nightlightMode > NL_MODE_SUN) nightlightMode = NL_MODE_SUN;
-
-  //toggle general purpose output
-  if (auxPin>=0) {
-    pos = req.indexOf(F("AX="));
-    if (pos > 0) {
-      auxTime = getNumVal(&req, pos);
-      auxActive = true;
-      if (auxTime == 0) auxActive = false;
-    }
-  }
 
   pos = req.indexOf(F("TT="));
   if (pos > 0) transitionDelay = getNumVal(&req, pos);
