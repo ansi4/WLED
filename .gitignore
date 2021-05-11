@@ -12,6 +12,7 @@
 /build_output
 .DS_Store
 .gitignore
+.gitpod.Dockerfile
 .clang-format
 node_modules
 .idea
