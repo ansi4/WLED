@@ -174,7 +174,7 @@ void deserializeSegment(JsonObject elem, byte it, byte presetId)
   return; // seg.hasChanged(prev);
 }
 
-bool deserializeState(JsonObject root, byte presetId)
+bool deserializeState(JsonObject root, byte callMode, byte presetId)
 {
   strip.applyToAllSelected = false;
   bool stateResponse = root[F("v")] | false;
@@ -294,7 +294,7 @@ bool deserializeState(JsonObject root, byte presetId)
     ps = root["ps"] | -1; //load preset (clears state request!)
     if (ps >= 0) {
       if (!presetId) unloadPlaylist(); //stop playlist if preset changed manually
-      applyPreset(ps);
+      applyPreset(ps, callMode);
       return stateResponse;
     }
 
@@ -312,10 +312,10 @@ bool deserializeState(JsonObject root, byte presetId)
     loadPlaylist(playlist, presetId);
     noNotification = true; //do not notify both for this request and the first playlist entry
   } else {
-    interfaceUpdateCallMode = NOTIFIER_CALL_MODE_WS_SEND;
+    interfaceUpdateCallMode = CALL_MODE_WS_SEND;
   }
 
-  colorUpdated(noNotification ? NOTIFIER_CALL_MODE_NO_NOTIFY : NOTIFIER_CALL_MODE_DIRECT_CHANGE);
+  colorUpdated(noNotification ? CALL_MODE_NO_NOTIFY : callMode);
 
   return stateResponse;
 }
