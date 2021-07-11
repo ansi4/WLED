@@ -15,4 +15,4 @@
 node_modules
 .idea
 .direnv
-wled00/wled00.ino.cpp
+/wled00/wled00.ino.cpp
