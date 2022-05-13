@@ -11,6 +11,10 @@
  */
 //#include "../usermods/EXAMPLE_v2/usermod_v2_example.h"
 
+#ifdef USERMOD_BATTERY_STATUS_BASIC
+#include "../usermods/battery_status_basic/usermod_v2_battery_status_basic.h"
+#endif
+
 #ifdef USERMOD_DALLASTEMPERATURE
 #include "../usermods/Temperature/usermod_temperature.h"
 #endif
@@ -19,7 +23,9 @@
 #include "../usermods/SN_Photoresistor/usermod_sn_photoresistor.h"
 #endif
 
-//#include "usermod_v2_empty.h"
+#ifdef USERMOD_PWM_FAN
+#include "../usermods/PWM_fan/usermod_PWM_fan.h"
+#endif
 
 #ifdef USERMOD_BUZZER
 #include "../usermods/buzzer/usermod_v2_buzzer.h"
@@ -40,10 +46,18 @@
 #include "../usermods/BME280_v2/usermod_bme280.h"
 #endif
 #ifdef USERMOD_FOUR_LINE_DISPLAY
-#include "../usermods/usermod_v2_four_line_display/usermod_v2_four_line_display.h"
+  #ifdef USE_ALT_DISPlAY
+    #include "../usermods/usermod_v2_four_line_display_ALT/usermod_v2_four_line_display_ALT.h"
+  #else 
+    #include "../usermods/usermod_v2_four_line_display/usermod_v2_four_line_display.h"
+  #endif
 #endif
 #ifdef USERMOD_ROTARY_ENCODER_UI
-#include "../usermods/usermod_v2_rotary_encoder_ui/usermod_v2_rotary_encoder_ui.h"
+  #ifdef USE_ALT_DISPlAY
+    #include "../usermods/usermod_v2_rotary_encoder_ui_ALT/usermod_v2_rotary_encoder_ui_ALT.h"
+  #else
+    #include "../usermods/usermod_v2_rotary_encoder_ui/usermod_v2_rotary_encoder_ui.h"
+  #endif
 #endif
 #ifdef USERMOD_AUTO_SAVE
 #include "../usermods/usermod_v2_auto_save/usermod_v2_auto_save.h"
@@ -82,6 +96,38 @@
 #include "../usermods/rgb-rotary-encoder/rgb-rotary-encoder.h"
 #endif
 
+#ifdef USERMOD_SEVEN_SEGMENT
+#include "../usermods/seven_segment_display/usermod_v2_seven_segment_display.h"
+#endif
+
+#ifdef USERMOD_SSDR
+#include "../usermods/seven_segment_display_reloaded/usermod_seven_segment_reloaded.h"
+#endif
+
+#ifdef USERMOD_CRONIXIE
+#include "../usermods/Cronixie/usermod_cronixie.h"
+#endif
+
+#ifdef QUINLED_AN_PENTA
+#include "../usermods/quinled-an-penta/quinled-an-penta.h"
+#endif
+
+#ifdef USERMOD_WIZLIGHTS
+#include "../usermods/wizlights/wizlights.h"
+#endif
+
+#ifdef USERMOD_WORDCLOCK
+#include "../usermods/usermod_v2_word_clock/usermod_v2_word_clock.h"
+#endif
+
+#ifdef USERMOD_MY9291
+#include "../usermods/MY9291/usermode_MY9291.h"
+#endif
+
+#ifdef USERMOD_SI7021_MQTT_HA
+#include "../usermods/Si7021_MQTT_HA/usermod_si7021_mqtt_ha.h"
+#endif
+
 void registerUsermods()
 {
 /*
@@ -91,6 +137,10 @@ void registerUsermods()
    */
   //usermods.add(new MyExampleUsermod());
 
+  #ifdef USERMOD_BATTERY_STATUS_BASIC
+  usermods.add(new UsermodBatteryBasic());
+  #endif
+
   #ifdef USERMOD_DALLASTEMPERATURE
   usermods.add(new UsermodTemperature());
   #endif
@@ -99,7 +149,9 @@ void registerUsermods()
   usermods.add(new Usermod_SN_Photoresistor());
   #endif
 
-  //usermods.add(new UsermodRenameMe());
+  #ifdef USERMOD_PWM_FAN
+  usermods.add(new PWMFanUsermod());
+  #endif
 
   #ifdef USERMOD_BUZZER
   usermods.add(new BuzzerUsermod());
@@ -158,5 +210,37 @@ void registerUsermods()
 
   #ifdef RGB_ROTARY_ENCODER
   usermods.add(new RgbRotaryEncoderUsermod());
+  #endif
+
+  #ifdef USERMOD_SEVEN_SEGMENT
+  usermods.add(new SevenSegmentDisplay());
+  #endif
+
+  #ifdef USERMOD_SSDR
+  usermods.add(new UsermodSSDR());
+  #endif
+
+  #ifdef USERMOD_CRONIXIE
+  usermods.add(new UsermodCronixie());
+  #endif
+
+  #ifdef QUINLED_AN_PENTA
+  usermods.add(new QuinLEDAnPentaUsermod());
+  #endif
+
+  #ifdef USERMOD_WIZLIGHTS
+  usermods.add(new WizLightsUsermod());
+  #endif
+  
+  #ifdef USERMOD_WORDCLOCK
+  usermods.add(new WordClockUsermod());
+  #endif
+
+  #ifdef USERMOD_MY9291
+  usermods.add(new MY9291Usermod());
+  #endif
+  
+  #ifdef USERMOD_SI7021_MQTT_HA
+  usermods.add(new Si7021_MQTT_HA());
   #endif
 }
